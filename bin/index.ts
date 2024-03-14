@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-import { readFile } from "fs/promises";
+import { readFile, writeFile } from "fs/promises";
 import { inspect } from "util";
 import { JSDOM } from "jsdom";
 
@@ -16,24 +16,31 @@ const main = async () => {
   const dom = new JSDOM(contentFile, { contentType: "text/xml" });
   const buttons = dom.window.document.querySelectorAll("button");
 
-  buttons.forEach((it) => {
-    console.log(getChildNode(it, "rect").outerHTML);
-  });
+  // buttons.forEach((it) => {
+  //   console.log(getChildNode(it, "rect").outerHTML);
+  // });
 
   const missingIdentifiersViews = Array.from(buttons).filter((button) => {
     const accessibility = getChildNode(button, "accessibility");
     return accessibility == undefined;
   });
-  console.log(`buttons size = ${missingIdentifiersViews.length}`);
 
   var index = 0;
+  const doc = dom.window.document;
   missingIdentifiersViews.forEach((it) => {
-    const newThing = new JSDOM(
-      `<accessibility key="accessibilityConfiguration" identifier="button_${index}"/>`,
-      { contentType: "text/xml" },
-    );
+    const newEl = doc.createElement("accessibility");
+    newEl.setAttribute("key", "accessibilityConfiguration");
+    newEl.setAttribute("identifier", `button-${index}`);
     index++;
+    it.appendChild(newEl);
   });
+
+  // missingIdentifiersViews.forEach((it) => {
+  //   console.log(it.outerHTML);
+  // });
+  const xmlOutput = dom.serialize()
+  console.log(`content = \n${xmlOutput}`);
+  await writeFile(file, xmlOutput);
 };
 
 function getChildNode(
