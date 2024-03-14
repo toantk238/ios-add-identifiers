@@ -1,5 +1,7 @@
 {
   "dependencies": {
+    "@types/jsdom": "^21.1.6",
+    "jsdom": "^24.0.0",
     "tsx": "^3.14.0"
   },
   "devDependencies": {
@@ -11,4 +13,3 @@
     "debug": "tsx ./bin/index.ts"
   }
 }
-
