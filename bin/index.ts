@@ -1,8 +1,14 @@
-#! /usr/bin/env node
+#! /usr/bin/env ts-node
 
 import { readFile, writeFile } from "fs/promises";
 import { inspect } from "util";
 import { JSDOM } from "jsdom";
+import yargs from "yargs";
+
+const options = yargs
+ .usage("Usage: -n <name>")
+ .option("n", { alias: "name", describe: "Your name", type: "string", demandOption: true })
+ .argv;
 
 const main = async () => {
   const file =
@@ -38,7 +44,7 @@ const main = async () => {
   // missingIdentifiersViews.forEach((it) => {
   //   console.log(it.outerHTML);
   // });
-  const xmlOutput = dom.serialize()
+  const xmlOutput = dom.serialize();
   console.log(`content = \n${xmlOutput}`);
   await writeFile(file, xmlOutput);
 };
