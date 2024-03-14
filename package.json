@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "tsx": "^3.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.19",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "scripts": {
+    "debug": "tsx ./bin/index.ts"
+  }
+}
+
