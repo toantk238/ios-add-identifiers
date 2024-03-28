@@ -3,7 +3,6 @@ import { readFile, writeFile } from "fs/promises";
 import { getChildNode, getChildNodes } from "@utils/xml";
 import { inspect } from "util";
 import { exists } from "fs";
-import { count } from "console";
 
 export class StoryboardParser {
   private file: string;
@@ -26,38 +25,39 @@ export class StoryboardParser {
     // missingIdentifiersViews.forEach((it) => {
     //   console.log(it.outerHTML);
     // });
-    this.insertId("button");
+    this.insertId("button", "textLocalizedKey", "btn");
+    this.insertId("textField", "placeholderLocalizedKey", "tf");
     const xmlOutput = this.dom.serialize();
     // console.log(`content = \n${xmlOutput}`);
     const firstLine = '<?xml version="1.0" encoding="UTF-8"?>';
-    const modifiedContent = (firstLine + "\n" + xmlOutput + "\n")
+    const modifiedContent = firstLine + "\n" + xmlOutput + "\n";
     await writeFile(this.file, modifiedContent);
   }
 
-  insertId(tag: string) {
-    const buttons = this.dom.window.document.querySelectorAll(tag);
+  insertId(tagInXml: string, keyPath: string, idPrefix: string) {
+    const buttons = this.dom.window.document.querySelectorAll(tagInXml);
 
     // buttons.forEach((it) => {
     //   console.log(getChildNode(it, "rect").outerHTML);
     // });
 
     const missingIdentifiersViews = Array.from(buttons).filter((button) => {
-      getLocalizedKeyValue(button);
+      // getLocalizedKeyValue(button);
       return undefinedIdentifier(button);
     });
 
     var index = 0;
     const doc = this.dom.window.document;
     missingIdentifiersViews.forEach((it) => {
-      const localizedKey = getLocalizedKeyValue(it);
+      const localizedKey = getLocalizedKeyValue(it, keyPath);
       var suffix = "";
       if (localizedKey) {
         suffix = localizedKey;
       } else {
-        suffix = "";
+        suffix = this.count.toString();
       }
       suffix = this.findAvailableSuffix(suffix);
-      const generatedId = `${tag}-${suffix}`;
+      const generatedId = `${idPrefix}-${suffix}`;
       const newEl = doc.createElement("accessibility");
       newEl.setAttribute("key", "accessibilityConfiguration");
       newEl.setAttribute("identifier", generatedId);
@@ -84,7 +84,10 @@ function undefinedIdentifier(node: Element) {
   return accessibility == undefined;
 }
 
-function getLocalizedKeyValue(node: Element): string | null | undefined {
+function getLocalizedKeyValue(
+  node: Element,
+  keyPath: string,
+): string | null | undefined {
   const temp: any = getChildNode(node, "userDefinedRuntimeAttributes");
   if (temp == undefined) return undefined;
 
@@ -92,7 +95,7 @@ function getLocalizedKeyValue(node: Element): string | null | undefined {
     temp,
     "userDefinedRuntimeAttribute",
   ).filter((x) => {
-    return x.getAttribute("keyPath") == "textLocalizedKey";
+    return x.getAttribute("keyPath") == keyPath;
   });
   const localizedKeyTag =
     localizedKeys.length > 0 ? localizedKeys[0] : undefined;
