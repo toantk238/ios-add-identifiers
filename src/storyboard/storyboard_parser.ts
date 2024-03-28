@@ -25,8 +25,14 @@ export class StoryboardParser {
     // missingIdentifiersViews.forEach((it) => {
     //   console.log(it.outerHTML);
     // });
-    this.insertId("button", "textLocalizedKey", "btn");
-    this.insertId("textField", "placeholderLocalizedKey", "tf");
+    this.insertId(
+      "button",
+      ["textLocalizedKey", "normalTitleLocalizedKey"],
+      "btn",
+    );
+    this.insertId("textField", ["placeholderLocalizedKey"], "tf");
+    this.insertId("switch", [], "switch");
+    this.insertId("label", [], "label");
     const xmlOutput = this.dom.serialize();
     // console.log(`content = \n${xmlOutput}`);
     const firstLine = '<?xml version="1.0" encoding="UTF-8"?>';
@@ -34,7 +40,7 @@ export class StoryboardParser {
     await writeFile(this.file, modifiedContent);
   }
 
-  insertId(tagInXml: string, keyPath: string, idPrefix: string) {
+  insertId(tagInXml: string, keyPath: string[], idPrefix: string) {
     const buttons = this.dom.window.document.querySelectorAll(tagInXml);
 
     // buttons.forEach((it) => {
@@ -50,13 +56,8 @@ export class StoryboardParser {
     const doc = this.dom.window.document;
     missingIdentifiersViews.forEach((it) => {
       const localizedKey = getLocalizedKeyValue(it, keyPath);
-      var suffix = "";
-      if (localizedKey) {
-        suffix = localizedKey;
-      } else {
-        suffix = this.count.toString();
-      }
-      suffix = this.findAvailableSuffix(suffix);
+      var suffix = localizedKey ?? (this.count++).toString();
+      // suffix = this.findAvailableSuffix(suffix);
       const generatedId = `${idPrefix}-${suffix}`;
       const newEl = doc.createElement("accessibility");
       newEl.setAttribute("key", "accessibilityConfiguration");
@@ -66,17 +67,21 @@ export class StoryboardParser {
     });
   }
 
-  findAvailableSuffix(tag: string): string {
-    if (!this.existedIds.has(tag)) return tag;
-
-    var temp = tag;
-    while (this.existedIds.has(temp)) {
-      this.count++;
-      temp = `${temp}-${this.count}`;
-    }
-
-    return temp;
-  }
+  // findAvailableSuffix(tag: string): string {
+  //   if (!this.existedIds.has(tag)) {
+  //     this.existedIds.add(tag);
+  //     return tag;
+  //   }
+  //
+  //   var temp = tag;
+  //   while (this.existedIds.has(temp)) {
+  //     this.count++;
+  //     temp = `${temp}-${this.count}`;
+  //   }
+  //   this.existedIds.add(temp);
+  //
+  //   return temp;
+  // }
 }
 
 function undefinedIdentifier(node: Element) {
@@ -86,7 +91,7 @@ function undefinedIdentifier(node: Element) {
 
 function getLocalizedKeyValue(
   node: Element,
-  keyPath: string,
+  keyPath: string[],
 ): string | null | undefined {
   const temp: any = getChildNode(node, "userDefinedRuntimeAttributes");
   if (temp == undefined) return undefined;
@@ -95,7 +100,7 @@ function getLocalizedKeyValue(
     temp,
     "userDefinedRuntimeAttribute",
   ).filter((x) => {
-    return x.getAttribute("keyPath") == keyPath;
+    return keyPath.includes(x.getAttribute("keyPath") ?? "");
   });
   const localizedKeyTag =
     localizedKeys.length > 0 ? localizedKeys[0] : undefined;
